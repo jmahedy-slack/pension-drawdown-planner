@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pension Drawdown Planner — Ninety One</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --surface: #121826;
+      --border: rgba(96, 165, 250, 0.18);
+      --accent: #60a5fa;
+      --accent-dim: rgba(96, 165, 250, 0.12);
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --danger: #f87171;
+      --bar: #60a5fa;
+      --bar-danger: #f87171;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Inter", system-ui, sans-serif;
+      background: radial-gradient(ellipse 120% 80% at 50% -20%, rgba(96, 165, 250, 0.12), transparent 55%), var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    .wrap {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 3rem;
+    }
+
+    header {
+      margin-bottom: 2rem;
+      padding-bottom: 1.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .eyebrow {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin: 0 0 0.35rem;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.5rem, 4vw, 1.875rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      margin: 0.5rem 0 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+      max-width: 42rem;
+    }
+
+    .grid {
+      display: grid;
+      gap: 1.25rem;
+    }
+
+    @media (min-width: 768px) {
+      .grid { grid-template-columns: 1fr 1fr; }
+      .span-2 { grid-column: 1 / -1; }
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem 1.35rem;
+    }
+
+    .card h2 {
+      margin: 0 0 1rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+    }
+
+    label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-bottom: 0.35rem;
+    }
+
+    .field { margin-bottom: 1rem; }
+    .field:last-child { margin-bottom: 0; }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 0.65rem 0.75rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 1rem;
+      font-family: inherit;
+    }
+
+    input[type="number"]:focus {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.75rem 0;
+    }
+
+    .toggle-row span.hint {
+      font-size: 0.8rem;
+      color: var(--muted);
+      display: block;
+      margin-top: 0.15rem;
+    }
+
+    .switch {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      inset: 0;
+      background: #334155;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .slider::before {
+      content: "";
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      left: 3px;
+      top: 3px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+
+    .switch input:checked + .slider {
+      background: var(--accent);
+    }
+
+    .switch input:checked + .slider::before {
+      transform: translateX(20px);
+    }
+
+    .result-headline {
+      font-size: clamp(1.35rem, 3.5vw, 1.75rem);
+      font-weight: 700;
+      color: var(--accent);
+      margin: 0 0 0.5rem;
+    }
+
+    .result-meta {
+      font-size: 0.95rem;
+      color: var(--muted);
+    }
+
+    .result-meta strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .chart-wrap {
+      overflow-x: auto;
+      padding-bottom: 0.25rem;
+    }
+
+    svg.chart {
+      display: block;
+      min-width: 100%;
+    }
+
+    .chart-caption {
+      margin: 0.75rem 0 0;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .legend {
+      display: flex;
+      gap: 1.25rem;
+      margin-top: 0.75rem;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .legend i {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      margin-right: 0.35rem;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <p class="eyebrow">Ninety One · Client tool</p>
+      <h1>Pension Drawdown Planner</h1>
+      <p class="subtitle">Show retiring clients how long their pension pot may last at a chosen withdrawal level, with optional inflation-linked increases.</p>
+    </header>
+
+    <div class="grid">
+      <section class="card" aria-labelledby="inputs-heading">
+        <h2 id="inputs-heading">Assumptions</h2>
+        <div class="field">
+          <label for="pot">Pot size (£)</label>
+          <input type="number" id="pot" min="0" step="1000" value="500000">
+        </div>
+        <div class="field">
+          <label for="withdrawal">Annual withdrawal (£)</label>
+          <input type="number" id="withdrawal" min="0" step="500" value="30000">
+        </div>
+        <div class="field">
+          <label for="growth">Annual growth (%)</label>
+          <input type="number" id="growth" min="0" max="20" step="0.1" value="4">
+        </div>
+        <div class="toggle-row">
+          <div>
+            <label for="inflation">Inflation-linked withdrawals</label>
+            <span class="hint">Increases withdrawal by 2.5% each year</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="inflation">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="result-heading">
+        <h2 id="result-heading">Projection</h2>
+        <p class="result-headline" id="duration">Your pot lasts 26 years</p>
+        <p class="result-meta">Total withdrawn over projection: <strong id="total-withdrawn">£780,000</strong></p>
+      </section>
+
+      <section class="card span-2" aria-labelledby="chart-heading">
+        <h2 id="chart-heading">Pot value at year start</h2>
+        <div class="chart-wrap">
+          <svg class="chart" id="chart" role="img" aria-label="Bar chart of pension pot value at the start of each year"></svg>
+        </div>
+        <p class="chart-caption">Withdrawal taken at the start of each year; remaining balance grows at your assumed rate. Horizon: 40 years.</p>
+        <div class="legend">
+          <span><i style="background: var(--bar)"></i>On track</span>
+          <span><i style="background: var(--bar-danger)"></i>Final 5 years before depletion</span>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const PROJECTION_HORIZON = 40;
+    const INFLATION_RATE = 0.025;
+
+    function withdrawalForYear(baseAnnual, yearIndex, inflationLinked) {
+      if (!inflationLinked) return baseAnnual;
+      return baseAnnual * (1 + INFLATION_RATE) ** (yearIndex - 1);
+    }
+
+    function calculateDrawdown({ potSize, annualWithdrawal, annualGrowthPercent, inflationLinked = false, horizon = PROJECTION_HORIZON }) {
+      const growthRate = annualGrowthPercent / 100;
+      let balance = potSize;
+      let yearsLast = 0;
+      let totalWithdrawn = 0;
+      const yearlyPotAtStart = [];
+
+      for (let year = 1; year <= horizon; year++) {
+        const withdrawal = withdrawalForYear(annualWithdrawal, year, inflationLinked);
+        yearlyPotAtStart.push({ year, value: balance });
+
+        if (balance < withdrawal) {
+          return { yearsLast, totalWithdrawn, lastsBeyondHorizon: false, yearlyPotAtStart };
+        }
+
+        balance -= withdrawal;
+        totalWithdrawn += withdrawal;
+        yearsLast = year;
+        balance *= 1 + growthRate;
+      }
+
+      const nextWithdrawal = withdrawalForYear(annualWithdrawal, horizon + 1, inflationLinked);
+      const lastsBeyondHorizon = balance >= nextWithdrawal;
+
+      return { yearsLast, totalWithdrawn, lastsBeyondHorizon, yearlyPotAtStart, balanceAfterHorizon: balance };
+    }
+
+    function formatDuration(result) {
+      if (result.lastsBeyondHorizon) return `Lasts beyond ${PROJECTION_HORIZON} years`;
+      return `Your pot lasts ${result.yearsLast} years`;
+    }
+
+    function formatMoney(n) {
+      return new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", maximumFractionDigits: 0 }).format(n);
+    }
+
+    function isBarDanger(year, result) {
+      if (result.lastsBeyondHorizon) return false;
+      if (result.yearsLast < 5) return year <= result.yearsLast;
+      return year > result.yearsLast - 5 && year <= result.yearsLast;
+    }
+
+    function renderChart(svg, series, result) {
+      const padding = { top: 16, right: 12, bottom: 28, left: 48 };
+      const barGap = 3;
+      const count = series.length;
+      const width = Math.max(640, count * 14 + padding.left + padding.right);
+      const height = 220;
+      const innerW = width - padding.left - padding.right;
+      const innerH = height - padding.top - padding.bottom;
+      const maxVal = Math.max(...series.map((d) => d.value), 1);
+      const barW = Math.max(4, (innerW - barGap * (count - 1)) / count);
+
+      let bars = "";
+      series.forEach((d, i) => {
+        const h = (d.value / maxVal) * innerH;
+        const x = padding.left + i * (barW + barGap);
+        const y = padding.top + innerH - h;
+        const fill = isBarDanger(d.year, result) ? "var(--bar-danger)" : "var(--bar)";
+        bars += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" fill="${fill}" rx="2"><title>Year ${d.year}: ${formatMoney(d.value)}</title></rect>`;
+      });
+
+      const yTicks = 4;
+      let grid = "";
+      for (let t = 0; t <= yTicks; t++) {
+        const val = (maxVal * t) / yTicks;
+        const y = padding.top + innerH - (val / maxVal) * innerH;
+        grid += `<line x1="${padding.left}" y1="${y}" x2="${width - padding.right}" y2="${y}" stroke="rgba(148,163,184,0.15)" stroke-width="1"/>`;
+        grid += `<text x="${padding.left - 8}" y="${y + 4}" text-anchor="end" fill="var(--muted)" font-size="10">${formatMoney(val)}</text>`;
+      }
+
+      const xLabel = (count <= 20)
+        ? series.map((d, i) => {
+            const x = padding.left + i * (barW + barGap) + barW / 2;
+            return `<text x="${x}" y="${height - 6}" text-anchor="middle" fill="var(--muted)" font-size="9">${d.year}</text>`;
+          }).join("")
+        : `<text x="${width / 2}" y="${height - 6}" text-anchor="middle" fill="var(--muted)" font-size="10">Years 1–${count}</text>`;
+
+      svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+      svg.setAttribute("width", width);
+      svg.setAttribute("height", height);
+      svg.innerHTML = grid + bars + xLabel;
+    }
+
+    function readInputs() {
+      return {
+        potSize: Math.max(0, Number(document.getElementById("pot").value) || 0),
+        annualWithdrawal: Math.max(0, Number(document.getElementById("withdrawal").value) || 0),
+        annualGrowthPercent: Math.max(0, Number(document.getElementById("growth").value) || 0),
+        inflationLinked: document.getElementById("inflation").checked,
+      };
+    }
+
+    function update() {
+      const params = readInputs();
+      const result = calculateDrawdown(params);
+      document.getElementById("duration").textContent = formatDuration(result);
+      document.getElementById("total-withdrawn").textContent = formatMoney(result.totalWithdrawn);
+      renderChart(document.getElementById("chart"), result.yearlyPotAtStart, result);
+    }
+
+    ["pot", "withdrawal", "growth", "inflation"].forEach((id) => {
+      document.getElementById(id).addEventListener("input", update);
+      document.getElementById(id).addEventListener("change", update);
+    });
+
+    update();
+  </script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "name": "pension-drawdown-planner",
+  "version": "1.0.0",
+  "description": "Ninety One Pension Drawdown Planner — client-facing pot longevity calculator",
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "license": "MIT"
+}
